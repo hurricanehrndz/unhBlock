@@ -1,0 +1,254 @@
+#!/bin/sh
+# based on unboundbl.sh maintained by alec armbruster (github.com/alectrocute)
+# refactor by carlos hernandez (git.io/hrndz) for unbound
+
+# list of urls containing list of domains seving ads and malware
+PROGRAM="unhBlock"
+UNHBLOCK_CONF_DST="/var/unbound/unhBlock.conf"
+
+download_url() {
+    url="$1"
+    target_file="$2"
+    printf "   Attempting to download %.185s (via curl).\n" "$url"
+    if curl --output /dev/null --silent --head --fail "$url"; then
+        curl -s "$url" >> "$target_file"
+        cnt=$((cnt+1))
+        printf " ^ Downloaded %.35s ...successfully.\n" "$url"
+    else
+        printf " * Error trying to download %.35s ...\n" "$url"
+        failed_cnt=$((failed_cnt+1))
+    fi
+}
+
+
+download_urls_in_list() {
+    urllist="$1"
+    target_file="$2"
+    list_name="$(basename "$urllist")"
+
+    printf "\n# Overview\n"
+    printf " ^ %s URLs to fetchs: %s\n" "$list_name" "$urllist"
+
+    # init counter for debugging purposes
+    cnt=0
+    failed_cnt=0
+    printf "# Downloading URLs in %s..." "$list_name"
+    while read -r url; do
+        dowload_url "$url" "$target_file"
+    done < "$urllist"
+    printf "\n[Done downloading external URLs]\n"
+    # sort all the lists and remove any whitelist items!
+    printf " ^ %d %s fetches failed." $failed_cnt "$list_name"
+    printf " ^ %d %s(s) will be parsed...\n\n" $cnt "$list_name"
+}
+
+
+rm_cruft() {
+    target_file="$1"
+    printf "[Removing comments, empty lines, + fixing lineendings]\n"
+    perl -i -ne \
+      '
+        $line = $_;
+        $line =~ s/^\s+//g;
+        $line =~ s/^#.*//g;
+        $line =~ s/#.*$//g;
+        $line =~ s/ +$//g;
+        $line =~ s/\r\n/\n/g;
+        if ($line ne "\n") {
+            print lc($line);
+        }
+      ' "${target_file}"
+}
+
+
+parse_domain_from_hostfile_records() {
+    target_file="$1"
+    printf "[Parse domains from hostfile like records]\n"
+    perl \
+      -i -pe \
+      '
+        s/(^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|^::[A-z0-9_.:]+)\s+([^#\s]+)/$2/g;
+      ' "${target_file}"
+}
+
+
+rm_duplicates() {
+    target_file="$1"
+    tmp_file=$(mktemp)
+    printf "[Removing duplicates]\n"
+    sort "${target_file}" | uniq > "${tmp_file}"
+    mv "${tmp_file}" "${target_file}"
+}
+
+
+rm_whitelist_from_blocklist() {
+    whitelist="$1"
+    blocklist="$2"
+    results=$(mktemp)
+    printf "[Removing whitelist from blocklist]\n"
+    grep -Fvxf "${whitelist}" "${blocklist}" > "${results}"
+    mv "${results}" "${blocklist}"
+}
+
+
+format_as_unbound_conf() {
+    target_file="$1"
+    printf "[Formatting records as unbound local data]\n"
+    perl -i -ne \
+      '
+        $cnt++;
+        if ($cnt == 1) {
+            printf("server:\n")
+        };
+        ($domain) = split(" ", $_, -1);
+        printf("local-zone: \"%s\" redirect\n", $domain);
+        printf("local-data: \"%s A 0.0.0.0\"\n", $domain);
+      ' "${target_file}"
+}
+
+
+fiter_domains() {
+    list="$1"
+
+    rm_cruft "$list"
+    parse_domain_from_hostfile_records "$list"
+    rm_duplicates "$list"
+}
+
+
+check_unbound_conf() {
+    conf="$1"
+    unbound-checkconf "$conf"  > /dev/null 2>&1 || \
+        (printf "Unbound conf created contained errors." && exit 1)
+}
+
+reload_unbound_conf() {
+    unbound-control reload > /dev/null
+}
+
+
+# create unbound conf
+create_and_install_unbound_conf() {
+    printf "[Starting unHblock update]"
+    blocklist="$(mktemp)"
+    download_urls_in_list "$blacklist_sources" "$blocklist"
+    filter_domains "$blocklist"
+
+    if [ -n "$whitelist_sources"  ]; then
+        whitelist="$(mktemp)"
+        download_urls_in_list "$whitelist_sources" "$whitelist"
+        filter_domains "$whitelist"
+
+        rm_whitelist_from_blocklist "$whitelist" "$blocklist"
+    fi
+
+    format_as_unbound_conf "$blocklist"
+    check_unbound_conf "$blocklist"
+    reload_unbound_conf
+
+    printf "+ %s update complete!" "$PROGRAM"
+}
+
+
+# to be expanded in the future, stats() or -stats displays
+# the amount of domains on the included blocklist.
+stats() {
+    domains_total=$(grep -C "^local-data" "$UNHBLOCK_CONF_DST")
+    printf "%s" "$domains_total"
+    exit
+}
+
+
+# displays usage settings for manual usage, if desired
+show_usage() {
+    printf "\nUsage: %s [-s] -u [-w whitelist] blaclist\n\n" "$PROGRAM"
+    printf " -h, --help            Display usage instructions\n"
+    printf " -u, --update          Download and rebuild blocklist(s).\n"
+    printf " -s, --stats           Display basic statistics of blocklist(s).\n"
+    printf " -w, --whitelist file  Whitelist sources to omit form blocklist.\n\n"
+}
+
+
+check_arguments() {
+    if [ -z "$blacklist_sources" ] || [ ! -f "$blacklist_sources" ]; then
+        printf "Missing blocklist file.\n"
+        exit 1
+    fi
+
+    if [ -n "$whitelist_sources" ]; then
+
+        [ -f "$whitelist_sources" ] || \
+            printf "File containing whitelist sources not found.\n"
+            exit 1
+    fi
+}
+
+
+parse_arguments() {
+    # shell script functionality
+    while getopts ":w:hs-:" opt; do
+      case $opt in
+        w)
+          whitelist_sources="$OPTARG"
+          ;;
+        s)
+          STATS=true
+          ;;
+        h)
+          show_usage >&2
+          exit
+          ;;
+        - )
+          case $OPTARG in
+            whitelist)
+              whitelist_sources="$OPTARG"
+              ;;
+            stats)
+              STATS=true
+              ;;
+            help)
+              show_usage >&2
+              exit
+              ;;
+            *)
+              echo "Invalid option: --$OPTARG" >&2
+              exit 2
+              ;;
+          esac
+          ;;
+
+        :)
+          echo 'Missing argument!' >&2
+          exit 1
+           ;;
+
+        \?)
+          echo "Invalid option: -$OPTARG" >&2
+          exit 2
+          ;;
+      esac
+    done
+    shift $((OPTIND-1))
+    blacklist_sources="$1"
+    check_arguments
+}
+
+
+check_sys_prereqs() {
+    (unbound-checkconf -h > /dev/null) || \
+        (echo "Missing unbound-checkconf" && exit 1)
+}
+
+
+main() {
+    check_prereqs
+    parse_arguments "$@"
+    $STATS && stats
+    create_and_install_unbound_conf
+}
+
+
+# Support sourcing
+if [ "$(basename -- "$0")" = "$PROGRAM" ]; then
+    main "$@"
+fi
