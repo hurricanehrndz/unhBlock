@@ -4,7 +4,7 @@
 
 # list of urls containing list of domains seving ads and malware
 PROGRAM="unhBlock"
-UNHBLOCK_CONF_DST="/var/unbound/unhBlock.conf"
+UNHBLOCK_CONF="unhBlock.conf"
 
 download_url() {
     url="$1"
@@ -122,8 +122,16 @@ check_unbound_conf() {
         (printf "Unbound conf created contained errors." && exit 1)
 }
 
-reload_unbound_conf() {
-    unbound-control reload > /dev/null
+
+install_unbound_blocklist_conf() {
+    blocklist="$1"
+    if [ -d "/etc/unbound" ]; then
+        UNHBLOCK_CONF_DST="/etc/unbound/$UNHBLOCK_CONF"
+    else
+        UNHBLOCK_CONF_DST="/var/unbound/$UNHBLOCK_CONF"
+    fi
+    mv "$blocklist" "$UNHBLOCK_CONF_DST"
+
 }
 
 
