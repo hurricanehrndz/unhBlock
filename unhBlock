@@ -36,7 +36,7 @@ download_urls_in_list() {
     failed_cnt=0
     printf "# Downloading URLs in %s..." "$list_name"
     while read -r url; do
-        dowload_url "$url" "$target_file"
+        download_url "$url" "$target_file"
     done < "$urllist"
     printf "\n[Done downloading external URLs]\n"
     # sort all the lists and remove any whitelist items!
@@ -109,7 +109,7 @@ format_as_unbound_conf() {
 }
 
 
-fiter_domains() {
+filter_domains() {
     list="$1"
 
     rm_cruft "$list"
@@ -125,7 +125,7 @@ check_unbound_conf() {
 }
 
 
-install_unbound_blocklist_conf() {
+place_unboundBL_conf() {
     blocklist="$1"
     mv "$blocklist" "$UNHBLOCK_CONF_DST"
 }
@@ -148,7 +148,7 @@ create_and_install_unbound_conf() {
 
     format_as_unbound_conf "$blocklist"
     check_unbound_conf "$blocklist"
-    reload_unbound_conf
+    place_unboundBL_conf "$blocklist"
 
     printf "+ %s update complete!" "$PROGRAM"
 }
@@ -255,7 +255,7 @@ check_sys_prereqs() {
 
 
 main() {
-    check_prereqs
+    check_sys_prereqs
     parse_arguments "$@"
     show_stats
     create_and_install_unbound_conf
