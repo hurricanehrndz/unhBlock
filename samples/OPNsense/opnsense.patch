@@ -1,0 +1,21 @@
+diff --git a/unhBlock b/unhBlock
+index 53f709a..fc03e6a 100755
+--- a/unhBlock
++++ b/unhBlock
+@@ -5,7 +5,7 @@
+ # list of urls containing list of domains seving ads and malware
+ PROGRAM="unhBlock"
+ UNHBLOCK_CONF="unhBlock.conf"
+-UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
++UNHBLOCK_CONF_DST="/var/unbound/etc/$UNHBLOCK_CONF"
+ STATS=false
+ BLACKHOLE="0.0.0.0"
+ BLACKHOLE_RECORD_TYPE="A"
+@@ -153,6 +153,7 @@ create_and_install_unbound_conf() {
+     format_as_unbound_conf "$blocklist"
+     check_unbound_conf "$blocklist"
+     place_unboundBL_conf "$blocklist"
++    pluginctl dns reload
+ 
+     printf "+ %s update complete!\n\n" "$PROGRAM"
+ }

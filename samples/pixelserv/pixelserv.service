@@ -1,0 +1,32 @@
+[Unit]
+Description=1px image webserver
+Requires=docker.service traefik.service
+After=docker.service traefik.service
+DefaultDependencies=no
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f pixelserv
+ExecStart=/usr/bin/docker run --name pixelserv \
+    --rm \
+    --network customNet \
+    --restart no \
+    --label traefik.enable=true \
+    --label traefik.docker.network=customNet \
+    --label traefik.http.routers.pixelserv-web.rule=Host(`blackhole.mydom.ca`) \
+    --label traefik.http.routers.pixelserv-web.entrypoints=web \
+    --label traefik.http.routers.pixelserv-web.middlewares=pixelserv-redir \
+    --label traefik.http.middlewares.pixelserv-redir.redirectscheme.scheme=https \
+    --label traefik.http.middlewares.pixelserv-redir.redirectscheme.permanent=true \
+    --label traefik.http.routers.pixelserv-secured.rule=Host(`blackhole.mydom.ca`) \
+    --label traefik.http.routers.pixelserv-secured.entrypoints=websecure \
+    --label traefik.http.routers.pixelserv-secured.tls=true \
+    --label traefik.http.routers.pixelserv-secured.tls.certresolver=leresolver \
+    pixelserv
+ExecStop=/usr/bin/docker stop -t 2 pixelserv
+ExecStopPost=-/usr/bin/docker rm -f pixelserv
+Restart=on-abort
+TimeoutSec=20
+
+[Install]
+WantedBy=multi-user.target
