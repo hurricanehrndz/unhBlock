@@ -249,7 +249,7 @@ parse_arguments() {
 
 
 check_sys_prereqs() {
-    (unbound-checkconf -h > /dev/null) || \
+    command -v unbound-checkconf > /dev/null || \
         (echo "Missing unbound-checkconf" && exit 1)
 }
 
