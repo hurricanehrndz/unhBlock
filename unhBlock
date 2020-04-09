@@ -191,8 +191,8 @@ check_arguments() {
     if [ -n "$whitelist_sources" ]; then
 
         [ -f "$whitelist_sources" ] || \
-            printf "File containing whitelist sources not found.\n"
-            exit 1
+            (printf "File containing whitelist sources not found.\n" \
+            && exit 1)
     fi
 }
 
