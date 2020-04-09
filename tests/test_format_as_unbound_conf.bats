@@ -26,3 +26,17 @@ load _test_base
     content=$(cat "$test_file")
     [ "$content" == "$expected" ]
 }
+
+@test "run 'format_as_unbound_conf' with CNAME record" {
+    local expected="$(printf 'server:\nlocal-zone: "%s" redirect\nlocal-data: "%s CNAME blackhole.com"'  'abcd.com' 'abcd.com')"
+    BLACKHOLE="blackhole.com"
+    BLACKHOLE_RECORD_TYPE="CNAME"
+    printf "abcd.com" \
+        > "$test_file"
+
+    run format_as_unbound_conf "$test_file"
+    [ "$status" -eq 0 ]
+
+    content=$(cat "$test_file")
+    [ "$content" == "$expected" ]
+}
