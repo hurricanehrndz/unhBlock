@@ -5,6 +5,7 @@
 # list of urls containing list of domains seving ads and malware
 PROGRAM="unhBlock"
 UNHBLOCK_CONF="unhBlock.conf"
+UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
 
 download_url() {
     url="$1"
@@ -125,13 +126,7 @@ check_unbound_conf() {
 
 install_unbound_blocklist_conf() {
     blocklist="$1"
-    if [ -d "/etc/unbound" ]; then
-        UNHBLOCK_CONF_DST="/etc/unbound/$UNHBLOCK_CONF"
-    else
-        UNHBLOCK_CONF_DST="/var/unbound/$UNHBLOCK_CONF"
-    fi
     mv "$blocklist" "$UNHBLOCK_CONF_DST"
-
 }
 
 
@@ -172,6 +167,7 @@ show_usage() {
     printf "\nUsage: %s [-s] -u [-w whitelist] blaclist\n\n" "$PROGRAM"
     printf " -h, --help            Display usage instructions\n"
     printf " -u, --update          Download and rebuild blocklist(s).\n"
+    printf " -d, --dest            System path to place/source Unbound foramtted blocklist(s).\n"
     printf " -s, --stats           Display basic statistics of blocklist(s).\n"
     printf " -w, --whitelist file  Whitelist sources to omit form blocklist.\n\n"
 }
@@ -194,10 +190,13 @@ check_arguments() {
 
 parse_arguments() {
     # shell script functionality
-    while getopts ":w:hs-:" opt; do
+    while getopts ":w:d:hs-:" opt; do
       case $opt in
         w)
           whitelist_sources="$OPTARG"
+          ;;
+        d)
+          UNHBLOCK_CONF_DST="$OPTARG"
           ;;
         s)
           STATS=true
@@ -210,6 +209,9 @@ parse_arguments() {
           case $OPTARG in
             whitelist)
               whitelist_sources="$OPTARG"
+              ;;
+            dest)
+              UNHBLOCK_CONF_DST="$OPTARG"
               ;;
             stats)
               STATS=true
