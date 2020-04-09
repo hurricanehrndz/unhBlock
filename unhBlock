@@ -6,6 +6,7 @@
 PROGRAM="unhBlock"
 UNHBLOCK_CONF="unhBlock.conf"
 UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
+STATS=false
 
 download_url() {
     url="$1"
@@ -155,10 +156,12 @@ create_and_install_unbound_conf() {
 
 # to be expanded in the future, stats() or -stats displays
 # the amount of domains on the included blocklist.
-stats() {
-    domains_total=$(grep -C "^local-data" "$UNHBLOCK_CONF_DST")
-    printf "%s" "$domains_total"
-    exit
+show_stats() {
+    ! $STATS && return
+    domains_total=$(grep -Ec "^local-data" "$UNHBLOCK_CONF_DST")
+    printf "\n# Blocked stats\n"
+    printf " ^ %s domains are being blocked.\n\n" "$domains_total"
+    exit 0
 }
 
 
@@ -174,6 +177,7 @@ show_usage() {
 
 
 check_arguments() {
+    $STATS && return
     if [ -z "$blacklist_sources" ] || [ ! -f "$blacklist_sources" ]; then
         printf "Missing blocklist file.\n"
         exit 1
@@ -253,7 +257,7 @@ check_sys_prereqs() {
 main() {
     check_prereqs
     parse_arguments "$@"
-    $STATS && stats
+    show_stats
     create_and_install_unbound_conf
 }
 
