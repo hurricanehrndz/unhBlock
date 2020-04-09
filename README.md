@@ -2,7 +2,7 @@
 
 Block ads, malware, tracking + more on systems running Unbound as a resolver.
 
-![unhBlock][demo]
+![unhBlock][unhblock-gif]
 
 This project is based on [UnboundBL][unboundbl-link] and like it depends on
 Unbound DNS to blackhole undesired content. unhBlock has been written with
@@ -34,7 +34,7 @@ Use OPNsense branch.
 ## Recommended configuration
 
 For best results redirect all domains found in blocklists to a host on your
-network using a [PixelServ][pixelserv-link] via the -b/--blackhole flag.
+network using a [PixelServ][pixelserv-link] via the `-b/--blackhole` flag.
 Optionally redirect unwanted traffic employing a `CNAME` record via `--type
 CNAME` option and parameter.
 
