@@ -208,7 +208,7 @@ check_arguments() {
 
 parse_arguments() {
     # shell script functionality
-    while getopts ":w:b:t:d:hs-:" opt; do
+    while getopts ":w:b:t:d:hrs-:" opt; do
       case $opt in
         w)
           whitelist_sources="$OPTARG"
