@@ -7,6 +7,7 @@ PROGRAM="unhBlock"
 UNHBLOCK_CONF="unhBlock.conf"
 UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
 STATS=false
+BLACKHOLE="0.0.0.0"
 
 download_url() {
     url="$1"
@@ -96,7 +97,7 @@ rm_whitelist_from_blocklist() {
 format_as_unbound_conf() {
     target_file="$1"
     printf "\n# Formatting records as unbound local data\n"
-    perl -i -ne \
+    blackhole=$BLACKHOLE perl -i -ne \
       '
         $cnt++;
         if ($cnt == 1) {
@@ -104,7 +105,7 @@ format_as_unbound_conf() {
         };
         ($domain) = split(" ", $_, -1);
         printf("local-zone: \"%s\" redirect\n", $domain);
-        printf("local-data: \"%s A 0.0.0.0\"\n", $domain);
+        printf("local-data: \"%s A %s\"\n", $domain, $ENV{blackhole});
       ' "${target_file}"
 }
 
@@ -171,6 +172,7 @@ show_usage() {
     printf "\nUsage: %s [-s] -u [-w whitelist] blaclist\n\n" "$PROGRAM"
     printf " -h, --help            Display usage instructions\n"
     printf " -u, --update          Download and rebuild blocklist(s).\n"
+    printf " -b, --blackhole       Blackhole destination (0.0.0.0).\n"
     printf " -d, --dest            System path to place/source Unbound foramtted blocklist(s).\n"
     printf " -s, --stats           Display basic statistics of blocklist(s).\n"
     printf " -w, --whitelist file  Whitelist sources to omit form blocklist.\n\n"
@@ -200,6 +202,9 @@ parse_arguments() {
         w)
           whitelist_sources="$OPTARG"
           ;;
+        b)
+          BLACKHOLE="$OPTARG"
+          ;;
         d)
           UNHBLOCK_CONF_DST="$OPTARG"
           ;;
@@ -214,6 +219,9 @@ parse_arguments() {
           case $OPTARG in
             whitelist)
               whitelist_sources="$OPTARG"
+              ;;
+            blackhole)
+              BLACKHOLE="$OPTARG"
               ;;
             dest)
               UNHBLOCK_CONF_DST="$OPTARG"
