@@ -38,7 +38,7 @@ download_urls_in_list() {
     while read -r url; do
         download_url "$url" "$target_file"
     done < "$urllist"
-    printf "\n[Done downloading external URLs]\n"
+    printf "\n# Done downloading external URLs\n"
     # sort all the lists and remove any whitelist items!
     printf " ^ %d %s fetches failed." $failed_cnt "$list_name"
     printf " ^ %d %s(s) will be parsed...\n\n" $cnt "$list_name"
@@ -47,7 +47,7 @@ download_urls_in_list() {
 
 rm_cruft() {
     target_file="$1"
-    printf "[Removing comments, empty lines, + fixing lineendings]\n"
+    printf " ^ Removing comments, empty lines, + fixing lineendings\n"
     perl -i -ne \
       '
         $line = $_;
@@ -65,7 +65,7 @@ rm_cruft() {
 
 parse_domain_from_hostfile_records() {
     target_file="$1"
-    printf "[Parse domains from hostfile like records]\n"
+    printf " ^ Parse domains from hostfile like records\n"
     perl \
       -i -pe \
       '
@@ -77,7 +77,7 @@ parse_domain_from_hostfile_records() {
 rm_duplicates() {
     target_file="$1"
     tmp_file=$(mktemp)
-    printf "[Removing duplicates]\n"
+    printf " ^ Removing duplicates\n"
     sort "${target_file}" | uniq > "${tmp_file}"
     mv "${tmp_file}" "${target_file}"
 }
@@ -87,7 +87,7 @@ rm_whitelist_from_blocklist() {
     whitelist="$1"
     blocklist="$2"
     results=$(mktemp)
-    printf "[Removing whitelist from blocklist]\n"
+    printf "\n# Removing whitelist from blocklist\n"
     grep -Fvxf "${whitelist}" "${blocklist}" > "${results}"
     mv "${results}" "${blocklist}"
 }
@@ -95,7 +95,7 @@ rm_whitelist_from_blocklist() {
 
 format_as_unbound_conf() {
     target_file="$1"
-    printf "[Formatting records as unbound local data]\n"
+    printf "\n# Formatting records as unbound local data\n"
     perl -i -ne \
       '
         $cnt++;
@@ -111,6 +111,7 @@ format_as_unbound_conf() {
 
 filter_domains() {
     list="$1"
+    printf "\n# Filtering domains from blocklist\n"
 
     rm_cruft "$list"
     parse_domain_from_hostfile_records "$list"
@@ -121,7 +122,7 @@ filter_domains() {
 check_unbound_conf() {
     conf="$1"
     unbound-checkconf "$conf"  > /dev/null 2>&1 || \
-        (printf "Unbound conf created contained errors." && exit 1)
+        (printf "Unbound blocklist conf contained errors." && exit 1)
 }
 
 
@@ -150,7 +151,7 @@ create_and_install_unbound_conf() {
     check_unbound_conf "$blocklist"
     place_unboundBL_conf "$blocklist"
 
-    printf "+ %s update complete!" "$PROGRAM"
+    printf "+ %s update complete!\n\n" "$PROGRAM"
 }
 
 
