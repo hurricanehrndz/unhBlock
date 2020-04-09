@@ -5,7 +5,7 @@
 # list of urls containing list of domains seving ads and malware
 PROGRAM="unhBlock"
 UNHBLOCK_CONF="unhBlock.conf"
-UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
+UNHBLOCK_CONF_DST="/var/unbound/etc/$UNHBLOCK_CONF"
 STATS=false
 RELOAD=false
 BLACKHOLE="0.0.0.0"
@@ -138,9 +138,7 @@ place_unboundBL_conf() {
 
 reload_unbound() {
     ! $RELOAD && return
-    if unbound-control status > /dev/null 2>&1 ; then
-        unbound-control reload
-    fi
+    pluginctl dns reload
 }
 
 
