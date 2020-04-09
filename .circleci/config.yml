@@ -1,0 +1,42 @@
+---
+version: 2
+jobs:
+  test_unhBlock:
+    docker:
+      - image: circleci/buildpack-deps:bionic
+    steps:
+      - checkout
+      - run:
+          name: Install prerequisites
+          command: |
+            sudo apt update && sudo apt install unbound bats shellcheck
+      - run:
+          name: Shellcheck
+          command: |
+            echo "Linting script ..."
+            (shellcheck -s sh unhBlock && \
+              echo -e "\e[32mLinting passed.") || \
+              echo  -e "\e[31mLinting failed."
+      - run:
+          name: Run BATS
+          command: |
+            bats tests
+          environment:
+            PROJECT_ROOT: "/home/circleci/project"
+
+      - run:
+          # yamllint disable rule:line-length
+          name: Create sample blacklist sources file
+          command: |
+            echo "https://raw.githubusercontent.com/hectorm/hmirror/master/data/stevenblack/list.txt" > blacklist
+
+      - run:
+          name: Test unhBlock with sample blacklist
+          command: |
+            sudo ./unhBlock blacklist
+
+workflows:
+  version: 2
+  build_pipeline:
+    jobs:
+      - test_unhBlock
