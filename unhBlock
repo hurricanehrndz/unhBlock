@@ -7,6 +7,7 @@ PROGRAM="unhBlock"
 UNHBLOCK_CONF="unhBlock.conf"
 UNHBLOCK_CONF_DST="/etc/unbound/unbound.conf.d/$UNHBLOCK_CONF"
 STATS=false
+RELOAD=false
 BLACKHOLE="0.0.0.0"
 BLACKHOLE_RECORD_TYPE="A"
 
@@ -135,6 +136,14 @@ place_unboundBL_conf() {
 }
 
 
+reload_unbound() {
+    ! $RELOAD && return
+    if unbound-control status > /dev/null 2>&1 ; then
+        unbound-control reload
+    fi
+}
+
+
 # create unbound conf
 create_and_install_unbound_conf() {
     printf "[Starting unHblock update]"
@@ -213,6 +222,9 @@ parse_arguments() {
         d)
           UNHBLOCK_CONF_DST="$OPTARG"
           ;;
+        r)
+          RELOAD=true
+          ;;
         s)
           STATS=true
           ;;
@@ -233,6 +245,9 @@ parse_arguments() {
               ;;
             dest)
               UNHBLOCK_CONF_DST="$OPTARG"
+              ;;
+            reload)
+              RELOAD=true
               ;;
             stats)
               STATS=true
@@ -276,6 +291,7 @@ main() {
     parse_arguments "$@"
     show_stats
     create_and_install_unbound_conf
+    reload_unbound
 }
 
 
