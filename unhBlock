@@ -199,7 +199,7 @@ check_arguments() {
 
 parse_arguments() {
     # shell script functionality
-    while getopts ":w:b:r:d:hs-:" opt; do
+    while getopts ":w:b:t:d:hs-:" opt; do
       case $opt in
         w)
           whitelist_sources="$OPTARG"
@@ -207,7 +207,7 @@ parse_arguments() {
         b)
           BLACKHOLE="$OPTARG"
           ;;
-        r)
+        t)
           BLACKHOLE_RECORD_TYPE="$OPTARG"
           ;;
         d)
@@ -228,7 +228,7 @@ parse_arguments() {
             blackhole)
               BLACKHOLE="$OPTARG"
               ;;
-            record)
+            type)
               BLACKHOLE_RECORD_TYPE="$OPTARG"
               ;;
             dest)
