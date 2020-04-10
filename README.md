@@ -40,7 +40,8 @@ CNAME` option and parameter.
 
 For my own personal configuration, I redirect all traffic to a PixelServ that is
 reachable only via a [`Traefik`][traefik-link] router to support SSL.
-Feel free to inspect the [sample service file].
+Feel free to inspect the [sample service file][pixel-service] and [Traefik
+config][traefik-config].
 
 ## Sample Lists
 
@@ -62,5 +63,6 @@ Carlos Hernandez | [e-mail](mailto:hurricanehrndz@techbyte.ca)
 [pixelserv-link]: 'https://hub.docker.com/r/imthai/pixelserv-tls'
 [traefik-link]: 'https://containo.us/traefik/'
 [recommend-lists]: 'https://discourse.pi-hole.net/t/update-the-best-blocking-lists-for-the-pi-hole-alternative-dns-servers-2019/13620'
-[service-exmaple-link]: samples/pixelserv/pixelserv.service
+[pixelserv-service]: samples/pixelserv/pixelserv.service
+[traefik-config]: samples/traefik/traefik.yml
 [unhblock-gif]: /samples/unhBlock.gif
