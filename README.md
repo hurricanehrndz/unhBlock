@@ -54,13 +54,13 @@ The sample lists in this repository were created based user recommendations.
 
 Carlos Hernandez | [e-mail](mailto:hurricanehrndz@techbyte.ca)
 
-[whitelist-sample]: '/samples/whitelist'
-[blacklist-sample]: '/samples/blacklist'
+[whitelist-sample]: samples/whitelist
+[blacklist-sample]: samples/blacklist
 [unboundbl-link]: 'https://github.com/alectrocute/UnboundBL'
 [license]: 'https://raw.githubusercontent.com/hurricanehrndz/unhBlock/master/LICENSE'
-[opnsense-action]: '/samples/OPNsense/actions_unhBlock.conf'
+[opnsense-action]: samples/OPNsense/actions_unhBlock.conf
 [pixelserv-link]: 'https://hub.docker.com/r/imthai/pixelserv-tls'
 [traefik-link]: 'https://containo.us/traefik/'
 [recommend-lists]: 'https://discourse.pi-hole.net/t/update-the-best-blocking-lists-for-the-pi-hole-alternative-dns-servers-2019/13620'
-[service-exmaple-link]: '/samples/pixelserv/pixelserv.service'
+[service-exmaple-link]: samples/pixelserv/pixelserv.service
 [unhblock-gif]: /samples/unhBlock.gif
