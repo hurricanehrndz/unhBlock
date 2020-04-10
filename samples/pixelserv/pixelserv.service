@@ -9,15 +9,13 @@ Type=simple
 ExecStartPre=-/usr/bin/docker rm -f pixelserv
 ExecStart=/usr/bin/docker run --name pixelserv \
     --rm \
-    --network customNet \
+    --network NNTPnet \
     --restart no \
     --label traefik.enable=true \
-    --label traefik.docker.network=customNet \
-    --label traefik.http.routers.pixelserv-web.rule=Host(`blackhole.mydom.ca`) \
+    --label traefik.docker.network=DNSnet \
+    --label traefik.http.routers.pixelserv-web.rule=HostRegexp(`{host:.+}`) \
     --label traefik.http.routers.pixelserv-web.entrypoints=web \
-    --label traefik.http.routers.pixelserv-web.middlewares=pixelserv-redir \
-    --label traefik.http.middlewares.pixelserv-redir.redirectscheme.scheme=https \
-    --label traefik.http.middlewares.pixelserv-redir.redirectscheme.permanent=true \
+    --label traefik.http.routers.pixelserv-web.priority=1 \
     --label traefik.http.routers.pixelserv-secured.rule=Host(`blackhole.mydom.ca`) \
     --label traefik.http.routers.pixelserv-secured.entrypoints=websecure \
     --label traefik.http.routers.pixelserv-secured.tls=true \

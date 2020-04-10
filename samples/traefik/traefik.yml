@@ -9,23 +9,6 @@ entryPoints:
   websecure:
     address: ":443"
 
-http:
-  routers:
-    to-pixelserv:
-      middlewares:
-        - pixelserv-redir
-      entryPoints:
-        - web
-        - websecure
-      rule: "HostRegexp(`{host:[a-z-.]+}`)"
-      priority: 2
-  middlewares:
-    pixelserv-redir:
-      redirectRegex:
-        regex: "^https?://.*/(.*)"
-        replacement: "https://blackhole.mydom.ca/${1}"
-        permanent: true
-
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
