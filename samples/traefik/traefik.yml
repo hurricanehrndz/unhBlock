@@ -1,0 +1,46 @@
+---
+log:
+  level: DEBUG
+
+entryPoints:
+  web:
+    address: ":80"
+
+  websecure:
+    address: ":443"
+
+http:
+  routers:
+    to-pixelserv:
+      middlewares:
+        - pixelserv-redir
+      entryPoints:
+        - web
+        - websecure
+      rule: "HostRegexp(`{host:[a-z-.]+}`)"
+      priority: 2
+  middlewares:
+    pixelserv-redir:
+      redirectRegex:
+        regex: "^https?://.*/(.*)"
+        replacement: "https://blackhole.mydom.ca/${1}"
+        permanent: true
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: DNSnet
+    watch: true
+
+certificatesResolvers:
+  leresolver:
+    acme:
+      email: joe@abcd.com
+      storage: acme.json
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 0
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
